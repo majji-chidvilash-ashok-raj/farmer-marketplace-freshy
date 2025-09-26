@@ -3,6 +3,8 @@ import "./SignUp.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { serverURL } from "./../../App";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../../firebase";
 
 const SignUp = () => {
   const [role, setRole] = useState("buyer");
@@ -35,6 +37,14 @@ const SignUp = () => {
       alert("Sign up failed. Please try again.");
     }
   };
+
+  const handleGoogleAuth = async(e) => {
+    e.preventDefault()
+
+    const provider = new GoogleAuthProvider()
+    const result = await signInWithPopup(auth,provider)
+    console.log(result)
+  }
 
   return (
     <div className="signup-background">
@@ -139,7 +149,7 @@ const SignUp = () => {
 
           {/* Sign up with Google Button */}
           <div className="form-group">
-            <button type="button" className="google-signup-btn">
+            <button type="button" className="google-signup-btn" onClick={handleGoogleAuth}>
               <img
                 src="https://www.svgrepo.com/show/475656/google-color.svg"
                 alt="Google icon"
