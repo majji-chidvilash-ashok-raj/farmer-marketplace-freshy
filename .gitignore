@@ -1,0 +1,9 @@
+# Ignore all env files
+.env
+.env.*
+
+# Ignore env inside client and server
+client/.env
+client/.env.*
+server/.env
+server/.env.*
