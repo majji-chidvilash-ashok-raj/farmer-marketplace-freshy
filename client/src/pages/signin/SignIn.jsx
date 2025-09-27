@@ -3,6 +3,8 @@ import "./signin.css";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { serverURL } from "./../../App";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from "../../../firebase";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -26,6 +28,22 @@ const SignIn = () => {
       console.error("❌ Login Failed:", error.response?.data || error.message);
     }
   };
+
+  const handleGoogleAuth = async(e) => {
+    e.preventDefault()
+
+    const provider = new GoogleAuthProvider()
+    const result = await signInWithPopup(auth,provider)
+    try {
+      const {data} = await axios.post(`${serverURL}/api/auth/googleauth`,{
+        email:result.user.email,
+      },{withCredentials:true})
+      console.log(data)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
 
   return (
     <div className="signup-background">
@@ -70,7 +88,7 @@ const SignIn = () => {
           <button type="submit">Sign In</button>
 
           {/* Google Sign in */}
-          <div className="form-group">
+          <div className="form-group" onClick={handleGoogleAuth}>
             <button type="button" className="google-signup-btn">
               <img
                 src="https://www.svgrepo.com/show/475656/google-color.svg"

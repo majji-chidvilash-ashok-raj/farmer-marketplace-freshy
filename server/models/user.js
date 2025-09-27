@@ -12,11 +12,15 @@ const userSchema = new mongoose.Schema({
     },
     password:{
         type:String,
-        required:true
+        required:false
     },
     mobile:{
         type:String,
         required:true
+    },
+    role:{
+        type:String,
+        enum:["buyer","farmer"]
     },
     resetOtp:{
         type:String

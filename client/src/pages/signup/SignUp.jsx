@@ -15,36 +15,61 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [mobile, setMobile] = useState("");
+  const [err, setErr] = useState("");
 
   const handleSignUp = async (e) => {
     e.preventDefault();
 
+    if (password !== confirmPassword) {
+      setErr("Passwords do not match");
+      return;
+    }
+    if(!agree){
+      setErr("You must agree to Terms & Conditions")
+      return
+    }
+
     try {
       const response = await axios.post(
         `${serverURL}/api/auth/signup`,
-        {
-          fullName,
-          email,
-          password,
-          mobile
-        },
+        { fullName, email, password, mobile, role },
         { withCredentials: true }
       );
-
-      console.log(response);
+      setErr("");
+      // Redirect or show success message
+      navigate("/signin");
     } catch (error) {
-      console.log(error);
-      alert("Sign up failed. Please try again.");
+      setErr(error.response?.data?.message || "Something went wrong");
     }
   };
 
-  const handleGoogleAuth = async(e) => {
-    e.preventDefault()
+  const handleGoogleAuth = async (e) => {
+    e.preventDefault();
+    if (!mobile) {
+      return setErr("Mobile number is required");
+    }
 
-    const provider = new GoogleAuthProvider()
-    const result = await signInWithPopup(auth,provider)
-    console.log(result)
-  }
+    const provider = new GoogleAuthProvider();
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const { data } = await axios.post(
+        `${serverURL}/api/auth/googleauth`,
+        {
+          fullName: result.user.displayName,
+          email: result.user.email,
+          mobile,
+          role,
+        },
+        { withCredentials: true }
+      );
+      console.log(data);
+      setErr("");
+      navigate("/signin");
+    } catch (error) {
+      setErr(error.response?.data?.message || "Google Sign-In failed");
+    }
+  };
 
   return (
     <div className="signup-background">
@@ -52,7 +77,6 @@ const SignUp = () => {
         <h1>FRESHY</h1>
         <p className="subtext">Create an account to buy fresh produce</p>
 
-        {/* ✅ onSubmit used here */}
         <form onSubmit={handleSignUp}>
           {/* Full Name */}
           <div className="form-group">
@@ -149,7 +173,11 @@ const SignUp = () => {
 
           {/* Sign up with Google Button */}
           <div className="form-group">
-            <button type="button" className="google-signup-btn" onClick={handleGoogleAuth}>
+            <button
+              type="button"
+              className="google-signup-btn"
+              onClick={handleGoogleAuth}
+            >
               <img
                 src="https://www.svgrepo.com/show/475656/google-color.svg"
                 alt="Google icon"
@@ -159,9 +187,12 @@ const SignUp = () => {
           </div>
 
           {/* Submit Button */}
-          <button type="submit" disabled={!agree}>
+          <button type="submit" >
             Create Account
           </button>
+
+          {/* Error Message */}
+          {err && <p className="error-message">{err}</p>}
 
           {/* Login Link */}
           <p className="login-link" onClick={() => navigate("/signin")}>

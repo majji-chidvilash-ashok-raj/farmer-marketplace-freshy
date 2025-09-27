@@ -218,6 +218,23 @@ p.login-link a:hover {
   cursor: pointer;
 }
 
+.error-message {
+  color: #ff4d4f;        /* Bright red for errors */
+  font-size: 0.9rem;      /* Slightly smaller than normal text */
+  font-weight: 500;       /* Medium weight for emphasis */
+  margin-left: 5px;       /* Small spacing from preceding text */
+  display: inline-block;  /* Keep it inline but allow padding/margin */
+}
+
+.error-message::before {
+  content: "⚠ ";          /* Optional warning icon before text */
+}
+
+p {
+  margin: 5px 0;          /* Optional spacing for the paragraph */
+}
+
+
 /* RESPONSIVE */
 @media (max-width: 480px) {
   .signup-container {
