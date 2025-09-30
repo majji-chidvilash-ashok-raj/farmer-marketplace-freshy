@@ -11,10 +11,13 @@ const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Handle normal email/password login
   const handleSignIn = async (e) => {
     e.preventDefault();
+    setErr("");
+    setLoading(true);
 
     try {
       const response = await axios.post(
@@ -23,36 +26,42 @@ const SignIn = () => {
         { withCredentials: true }
       );
 
-      setErr("");
       console.log("Signin Success:", response.data);
-
-      // Navigate after successful login
-      navigate("/dashboard"); // change route as needed
+      navigate("/dashboard"); // Redirect after login
     } catch (error) {
       setErr(error.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Handle Google login
   const handleGoogleAuth = async (e) => {
     e.preventDefault();
+    setErr("");
+    setLoading(true);
+
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
 
       const { data } = await axios.post(
         `${serverURL}/api/auth/googleauth`,
-        { email: result.user.email },
+        {
+          fullName: result.user.displayName,
+          email: result.user.email,
+          mobile: "", // optional: prompt user if needed
+          role: "buyer", // default role
+        },
         { withCredentials: true }
       );
 
       console.log("Google Signin Success:", data);
-
-      // Navigate after successful google login
-      navigate("/dashboard"); // change route as needed
+      navigate("/dashboard"); // Redirect after Google login
     } catch (error) {
-      console.log(error);
       setErr(error.response?.data?.message || error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,8 +77,8 @@ const SignIn = () => {
             <label>Email</label>
             <input
               type="email"
-              onChange={(e) => setEmail(e.target.value)}
               value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
             />
@@ -80,8 +89,8 @@ const SignIn = () => {
             <label>Password</label>
             <input
               type="password"
-              onChange={(e) => setPassword(e.target.value)}
               value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
             />
@@ -96,7 +105,9 @@ const SignIn = () => {
           </p>
 
           {/* Sign in button */}
-          <button type="submit">Sign In</button>
+          <button type="submit" disabled={loading}>
+            {loading ? "Verifying..." : "Login"}
+          </button>
 
           {/* Error Message */}
           {err && <p className="error-message">{err}</p>}
@@ -107,6 +118,7 @@ const SignIn = () => {
               type="button"
               className="google-signin-btn"
               onClick={handleGoogleAuth}
+              disabled={loading}
             >
               <img
                 src="https://www.svgrepo.com/show/475656/google-color.svg"

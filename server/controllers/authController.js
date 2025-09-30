@@ -1,4 +1,4 @@
-import { sendOtpMail } from "../middlewares/mail.js";
+import { sendLoginInfo, sendOtpMail } from "../middlewares/mail.js";
 import Token from "../middlewares/verifyToken.js";
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
@@ -70,6 +70,7 @@ export const signIn = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
     });
+    await sendLoginInfo(email);
 
     return res.status(200).json({ message: "signIn successfull" });
   } catch (error) {
@@ -86,6 +87,7 @@ export const signOut = async (req, res) => {
     return res.status(500).json({ message: "server error" });
   }
 };
+
 
 // ====================== SEND OTP ======================
 export const sendOtp = async (req, res) => {
@@ -187,3 +189,83 @@ export const googleAuth = async (req, res) => {
       .json({ message: "server error", error: error.message });
   }
 };
+
+
+
+// ====================== SEND SIGNUP OTP ======================
+export const sendSignupOtp = async (req, res) => {
+  try {
+    const { fullName, email, password, mobile, role } = req.body;
+
+    // check if user already exists
+    let existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+    if (mobile.length < 10) {
+      return res.status(400).json({ message: "Mobile number must be at least 10 characters" });
+    }
+
+    // Generate OTP
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Temporarily save signup data + OTP in a separate collection or in-memory
+    req.app.locals.signupOtpData = {
+      fullName,
+      email,
+      password,
+      mobile,
+      role,
+      otp,
+      expires: Date.now() + 5 * 60 * 1000,
+    };
+
+    console.log("Signup OTP:", otp, "for", email);
+    await sendOtpMail(email, otp);
+
+    return res.status(200).json({ message: "OTP sent to your email" });
+  } catch (error) {
+    console.error("Signup OTP error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ====================== VERIFY SIGNUP OTP ======================
+export const verifySignupOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const signupData = req.app.locals.signupOtpData;
+
+    if (
+      !signupData ||
+      signupData.email !== email ||
+      signupData.otp !== otp ||
+      signupData.expires < Date.now()
+    ) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // Hash password & create user
+    const hashedPassword = await bcrypt.hash(signupData.password, 10);
+    await User.create({
+      fullName: signupData.fullName,
+      email: signupData.email,
+      password: hashedPassword,
+      mobile: signupData.mobile,
+      role: signupData.role,
+    });
+
+    // clear saved OTP
+    req.app.locals.signupOtpData = null;
+
+    return res.status(201).json({ message: "Signup successful" });
+  } catch (error) {
+    console.error("Verify signup OTP error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+

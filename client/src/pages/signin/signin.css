@@ -185,3 +185,20 @@ p {
     font-size: 1.5rem;
   }
 }
+
+
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button[disabled]::after {
+  content: " ⏳"; /* little spinner emoji */
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
