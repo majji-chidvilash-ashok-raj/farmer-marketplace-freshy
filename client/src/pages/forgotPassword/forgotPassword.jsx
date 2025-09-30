@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import "./forgotPassword.css";
-import { serverURL } from '../../App';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { serverURL } from "../../App";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
   const [step, setStep] = useState(1);
@@ -10,56 +10,98 @@ const ForgotPassword = () => {
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [err, setErr] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false); // ✅ loading state
   const navigate = useNavigate();
 
+  // Helper: extract error safely
+  const getErrorMessage = (error, fallback = "Something went wrong") => {
+    return (
+      error.response?.data?.message ||
+      error.response?.data ||
+      fallback
+    ).toString();
+  };
+
+  // Step 1: Send OTP
   const handleSendOtp = async (e) => {
     e.preventDefault();
+    setErr("");
+    setSuccess("");
+    setLoading(true);
     try {
-      await axios.post(`${serverURL}/api/auth/sendotp`, { email }, { withCredentials: true });
+      await axios.post(
+        `${serverURL}/api/auth/sendotp`,
+        { email },
+        { withCredentials: true }
+      );
       setStep(2);
+      setSuccess("OTP sent to your email.");
     } catch (error) {
-  if (error.response) {
-    console.error("Backend error:", error.response.data);
-  } else if (error.request) {
-    console.error("No response from server:", error.request);
-  } else {
-    console.error("Axios error:", error.message);
-  }
-}
-  }
-
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${serverURL}/api/auth/verifyotp`, { email, otp }, { withCredentials: true });
-      setStep(3);
-    } catch (error) {
-      console.log(error);
+      setErr(getErrorMessage(error, "Failed to send OTP"));
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Step 2: Verify OTP
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setErr("");
+    setSuccess("");
+    setLoading(true);
+    try {
+      await axios.post(
+        `${serverURL}/api/auth/verifyotp`,
+        { email, otp },
+        { withCredentials: true }
+      );
+      setStep(3);
+      setSuccess("OTP verified successfully!");
+    } catch (error) {
+      setErr(getErrorMessage(error, "Invalid OTP"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Reset Password
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    setErr("");
+    setSuccess("");
+    setLoading(true);
     try {
       if (password !== confirmPassword) {
-        alert("Passwords do not match");
+        setErr("Passwords do not match");
         return;
       }
-      await axios.post(`${serverURL}/api/auth/resetpassword`, { email, newPassword: password }, { withCredentials: true });
-      navigate("/signin");
+      await axios.post(
+        `${serverURL}/api/auth/resetpassword`,
+        { email, newPassword: password },
+        { withCredentials: true }
+      );
+      setSuccess("Password reset successful! Redirecting...");
+      setTimeout(() => navigate("/signin"), 2000);
     } catch (error) {
-      console.log(error);
+      setErr(getErrorMessage(error, "Failed to reset password"));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="signup-background">
+    <div className="forgot-background">
+      {/* Step 1: Email Input */}
       {step === 1 && (
-        <div className="signup-container">
+        <div className="forgot-container">
           <h1>Forgot Password?</h1>
-          <p className="subtext">Enter your email address and we’ll send you an OTP to reset your password.</p>
-          <form>
+          <p className="subtext">
+            Enter your email address and we’ll send you an OTP to reset your
+            password.
+          </p>
+          <form onSubmit={handleSendOtp}>
             <div className="form-group">
               <label>Email</label>
               <input
@@ -70,36 +112,47 @@ const ForgotPassword = () => {
                 required
               />
             </div>
-            <button type="submit" onClick={handleSendOtp}>Send OTP</button>
+            {err && <p className="error-message">{err}</p>}
+            {success && <p className="success-message">{success}</p>}
+            <button type="submit" disabled={loading}>
+              {loading ? "Sending..." : "Send OTP"}
+            </button>
           </form>
         </div>
       )}
 
+      {/* Step 2: OTP Verification */}
       {step === 2 && (
-        <div className="signup-container">
+        <div className="forgot-container">
           <h1>Verify OTP</h1>
-          <p className="subtext">Enter OTP sent to your email.</p>
-          <form>
+          <p className="subtext">Enter the OTP sent to your email.</p>
+          <form onSubmit={handleVerifyOtp}>
             <div className="form-group">
               <label>OTP</label>
               <input
                 type="text"
+                className="otp-input"
                 placeholder="Enter OTP"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 required
               />
             </div>
-            <button onClick={handleVerifyOtp}>Verify</button>
+            {err && <p className="error-message">{err}</p>}
+            {success && <p className="success-message">{success}</p>}
+            <button type="submit" disabled={loading}>
+              {loading ? "Verifying..." : "Verify"}
+            </button>
           </form>
         </div>
       )}
 
+      {/* Step 3: Reset Password */}
       {step === 3 && (
-        <div className="signup-container">
+        <div className="forgot-container">
           <h1>Reset Password</h1>
           <p className="subtext">Enter your new password.</p>
-          <form>
+          <form onSubmit={handleResetPassword}>
             <div className="form-group">
               <label>New password</label>
               <input
@@ -120,7 +173,11 @@ const ForgotPassword = () => {
                 required
               />
             </div>
-            <button onClick={handleResetPassword}>Reset Password</button>
+            {err && <p className="error-message">{err}</p>}
+            {success && <p className="success-message">{success}</p>}
+            <button type="submit" disabled={loading}>
+              {loading ? "Resetting..." : "Reset Password"}
+            </button>
           </form>
         </div>
       )}

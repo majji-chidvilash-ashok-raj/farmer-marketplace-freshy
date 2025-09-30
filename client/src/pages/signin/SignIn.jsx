@@ -10,7 +10,9 @@ const SignIn = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [err, setErr] = useState("");
 
+  // Handle normal email/password login
   const handleSignIn = async (e) => {
     e.preventDefault();
 
@@ -21,33 +23,42 @@ const SignIn = () => {
         { withCredentials: true }
       );
 
-      console.log("✅ Login Success:", response.data);
-      // Example: redirect to dashboard
-      // navigate("/dashboard");
+      setErr("");
+      console.log("Signin Success:", response.data);
+
+      // Navigate after successful login
+      navigate("/dashboard"); // change route as needed
     } catch (error) {
-      console.error("❌ Login Failed:", error.response?.data || error.message);
+      setErr(error.response?.data?.message || error.message);
     }
   };
 
-  const handleGoogleAuth = async(e) => {
-    e.preventDefault()
-
-    const provider = new GoogleAuthProvider()
-    const result = await signInWithPopup(auth,provider)
+  // Handle Google login
+  const handleGoogleAuth = async (e) => {
+    e.preventDefault();
     try {
-      const {data} = await axios.post(`${serverURL}/api/auth/googleauth`,{
-        email:result.user.email,
-      },{withCredentials:true})
-      console.log(data)
-    } catch (error) {
-      console.log(error)
-    }
-  }
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
 
+      const { data } = await axios.post(
+        `${serverURL}/api/auth/googleauth`,
+        { email: result.user.email },
+        { withCredentials: true }
+      );
+
+      console.log("Google Signin Success:", data);
+
+      // Navigate after successful google login
+      navigate("/dashboard"); // change route as needed
+    } catch (error) {
+      console.log(error);
+      setErr(error.response?.data?.message || error.message);
+    }
+  };
 
   return (
-    <div className="signup-background">
-      <div className="signup-container">
+    <div className="signin-background">
+      <div className="signin-container">
         <h1>FRESHY</h1>
         <p className="subtext">Login to buy fresh produce</p>
 
@@ -87,9 +98,16 @@ const SignIn = () => {
           {/* Sign in button */}
           <button type="submit">Sign In</button>
 
+          {/* Error Message */}
+          {err && <p className="error-message">{err}</p>}
+
           {/* Google Sign in */}
-          <div className="form-group" onClick={handleGoogleAuth}>
-            <button type="button" className="google-signup-btn">
+          <div className="form-group">
+            <button
+              type="button"
+              className="google-signin-btn"
+              onClick={handleGoogleAuth}
+            >
               <img
                 src="https://www.svgrepo.com/show/475656/google-color.svg"
                 alt="Google icon"
