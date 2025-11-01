@@ -5,6 +5,8 @@ import axios from "axios";
 import { serverURL } from "./../../App";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../../firebase";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../../redux/UserSlice";
 
 const SignUp = () => {
   const [role, setRole] = useState("buyer");
@@ -19,6 +21,7 @@ const SignUp = () => {
 
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch()
 
   // ================== Handle Sign Up ==================
   const handleSignUp = async (e) => {
@@ -42,6 +45,7 @@ const SignUp = () => {
         { fullName, email, password, mobile, role },
         { withCredentials: true }
       );
+      dispatch(setUserData(result.data))
 
       setErr("");
       console.log("Signup success:", response.data);
@@ -59,7 +63,6 @@ const SignUp = () => {
   const handleGoogleAuth = async (e) => {
     e.preventDefault();
 
-    // If you want mobile required for Google signup, keep this check:
     if (!mobile) {
       return setErr("Mobile number is required for Google signup");
     }
@@ -78,8 +81,8 @@ const SignUp = () => {
         },
         { withCredentials: true }
       );
+      dispatch(setUserData(data));
 
-      console.log("Google signup:", data);
       setErr("");
       navigate("/signin");
     } catch (error) {
@@ -164,6 +167,20 @@ const SignUp = () => {
                 onClick={() => setRole("buyer")}
               >
                 Buyer
+              </button>
+              <button
+                type="button"
+                className={`role-btn ${role === "merchant" ? "active" : ""}`}
+                onClick={() => setRole("merchant")}
+              >
+                Merchant
+              </button>
+              <button
+                type="button"
+                className={`role-btn ${role === "merchant" ? "active" : ""}`}
+                onClick={() => setRole("merchant")}
+              >
+                Delivery
               </button>
               <button type="button" className="role-btn disabled" disabled>
                 Farmer

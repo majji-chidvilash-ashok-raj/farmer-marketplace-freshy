@@ -104,15 +104,21 @@ button,
   padding: 0.6rem;
   border-radius: 6px;
   border: 2px solid #2e7d32;
-  background: none;
+  background: white;
+  color: #2e7d32; /* Unselected roles have black text */
   font-weight: bold;
   cursor: pointer;
   transition: background 0.3s ease, color 0.3s ease;
 }
 
+.role-btn:hover {
+  background-color: #f5fff5;
+}
+
 .role-btn.active {
   background: #2e7d32;
   color: white;
+  border-color: #2e7d32;
 }
 
 .role-btn.disabled {
@@ -218,22 +224,22 @@ p.login-link a:hover {
   cursor: pointer;
 }
 
+/* ERROR MESSAGE */
 .error-message {
-  color: #ff4d4f;        /* Bright red for errors */
-  font-size: 0.9rem;      /* Slightly smaller than normal text */
-  font-weight: 500;       /* Medium weight for emphasis */
-  margin-left: 5px;       /* Small spacing from preceding text */
-  display: inline-block;  /* Keep it inline but allow padding/margin */
+  color: #ff4d4f;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 5px;
+  display: inline-block;
 }
 
 .error-message::before {
-  content: "⚠ ";          /* Optional warning icon before text */
+  content: "⚠ ";
 }
 
 p {
-  margin: 5px 0;          /* Optional spacing for the paragraph */
+  margin: 5px 0;
 }
-
 
 /* RESPONSIVE */
 @media (max-width: 480px) {
