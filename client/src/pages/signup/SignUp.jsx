@@ -10,43 +10,58 @@ const SignUp = () => {
   const [role, setRole] = useState("buyer");
   const [agree, setAgree] = useState(false);
   const navigate = useNavigate();
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [mobile, setMobile] = useState("");
-  const [err, setErr] = useState("");
 
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // ================== Handle Sign Up ==================
   const handleSignUp = async (e) => {
     e.preventDefault();
 
+    // Validation
     if (password !== confirmPassword) {
-      setErr("Passwords do not match");
-      return;
+      return setErr("Passwords do not match");
     }
-    if(!agree){
-      setErr("You must agree to Terms & Conditions")
-      return
+    if (password.length < 6) {
+      return setErr("Password must be at least 6 characters long");
+    }
+    if (!agree) {
+      return setErr("You must agree to Terms & Conditions");
     }
 
     try {
+      setLoading(true);
       const response = await axios.post(
         `${serverURL}/api/auth/signup`,
         { fullName, email, password, mobile, role },
         { withCredentials: true }
       );
+
       setErr("");
-      // Redirect or show success message
+      console.log("Signup success:", response.data);
+
+      // redirect to signin
       navigate("/signin");
     } catch (error) {
       setErr(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // ================== Handle Google Auth ==================
   const handleGoogleAuth = async (e) => {
     e.preventDefault();
+
+    // If you want mobile required for Google signup, keep this check:
     if (!mobile) {
-      return setErr("Mobile number is required");
+      return setErr("Mobile number is required for Google signup");
     }
 
     const provider = new GoogleAuthProvider();
@@ -63,7 +78,8 @@ const SignUp = () => {
         },
         { withCredentials: true }
       );
-      console.log(data);
+
+      console.log("Google signup:", data);
       setErr("");
       navigate("/signin");
     } catch (error) {
@@ -171,7 +187,7 @@ const SignUp = () => {
             </label>
           </div>
 
-          {/* Sign up with Google Button */}
+          {/* Google Signup */}
           <div className="form-group">
             <button
               type="button"
@@ -186,12 +202,12 @@ const SignUp = () => {
             </button>
           </div>
 
-          {/* Submit Button */}
-          <button type="submit" >
-            Create Account
+          {/* Submit */}
+          <button type="submit" disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
 
-          {/* Error Message */}
+          {/* Error */}
           {err && <p className="error-message">{err}</p>}
 
           {/* Login Link */}

@@ -45,6 +45,55 @@ export const sendLoginInfo = async (to) => {
   }
 };
 
+export const sendWelcomeMail = async (to, fullName) => {
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.FRESHY_EMAIL,
+      to,
+      subject: "Welcome to FRESHY!",
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <h2 style="color: #4CAF50;">Welcome to FRESHY, ${fullName}!</h2>
+          <p>Dear ${fullName},</p>
+          <p>Thank you for signing up for FRESHY! We're excited to have you on board.</p>
+          <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+          <p>Best regards,<br/><strong>The FRESHY Team</strong></p>
+        </div>
+      `,
+    });
+
+    console.log("Welcome email sent:", info.messageId);
+  } catch (error) {
+    console.error("sendWelcomeMail error:", error);
+    throw error; 
+  }
+};
+
+export const sendPassMail = async (to, email) => {
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.FRESHY_EMAIL,
+      to,
+      subject: "Password Changed Successfully",
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <h2 style="color: #4CAF50;">Password Changed Successfully</h2>
+          <p>Dear User,</p>
+          <p>Your password has been changed successfully. If you did not initiate this change, please contact support immediately.</p>
+          <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
+          <p>Best regards,<br/><strong>The FRESHY Team</strong></p>
+        </div>
+      `,
+    });
+
+    console.log("Welcome email sent:", info.messageId);
+  } catch (error) {
+    console.error("sendWelcomeMail error:", error);
+    throw error; 
+  }
+};
+
+
 
 export const sendOtpMail = async (to, otp) => {
   try {

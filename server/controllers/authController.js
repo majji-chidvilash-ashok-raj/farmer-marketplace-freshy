@@ -1,4 +1,4 @@
-import { sendLoginInfo, sendOtpMail } from "../middlewares/mail.js";
+import { sendLoginInfo, sendOtpMail, sendPassMail, sendWelcomeMail } from "../middlewares/mail.js";
 import Token from "../middlewares/verifyToken.js";
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
@@ -40,6 +40,7 @@ export const signUp = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
     });
+    await sendWelcomeMail(email, fullName);
 
     return res.status(201).json({ message: "User created successfully" });
   } catch (error) {
@@ -149,6 +150,7 @@ export const resetPassword = async (req, res) => {
     user.password = hashedPassword;
     user.isOtpVerified = false; // reset BEFORE saving
     await user.save();
+    await sendPassMail(email);
 
     return res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
